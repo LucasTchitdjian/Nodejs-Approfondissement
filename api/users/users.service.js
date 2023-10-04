@@ -21,10 +21,12 @@ class UserService {
   async checkPasswordUser(email, password) {
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("No user found with email:", email);
       return false;
     }
     const bool = await bcrypt.compare(password, user.password);
     if (!bool) {
+      console.log("Password does not match for email:", email);
       return false;
     }
     return user._id;

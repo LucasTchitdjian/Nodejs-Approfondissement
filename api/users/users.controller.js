@@ -59,7 +59,10 @@ class UsersController {
   async login(req, res, next) {
     try {
       const { email, password } = req.body;
+      console.log("Email:", email);
+      console.log("Password:", password);
       const userId = await usersService.checkPasswordUser(email, password);
+      console.log("Returned userId:", userId);
       if (!userId) {
         throw new UnauthorizedError();
       }
