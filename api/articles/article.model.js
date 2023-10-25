@@ -1,6 +1,31 @@
-const express = require('express');
+const mongoose = require('mongoose');
 
-const Article = require('./article.model');
+const articleSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    content: {
+        type: String,
+        required: true
+    },
+    status: {
+        type: String,
+        enum: ['draft', 'published'],
+        default: 'draft' 
+    },    
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+let Article;
+if (mongoose.models.Article) {
+    Article = mongoose.model('Article');
+} else {
+    Article = mongoose.model('Article', articleSchema);
+}
 
 class ArticleController {
     createArticle(req, res) {
@@ -10,14 +35,13 @@ class ArticleController {
             status: req.body.status,
             author: req.user._id 
         });
-    
+
         newArticle.save().then(article => {
             res.json(article);
         }).catch(err => {
             res.status(400).json(err);
         });
     }
-    
 
     updateArticle(req, res) {
         const { title, content, status } = req.body;
@@ -54,4 +78,7 @@ class ArticleController {
     }
 }
 
-module.exports = ArticleController;
+module.exports = {
+    Article,
+    ArticleController
+};

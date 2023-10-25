@@ -6,7 +6,12 @@ const NotFoundError = require("./errors/not-found");
 const userRouter = require("./api/users/users.router");
 const usersController = require("./api/users/users.controller");
 const authMiddleware = require("./middlewares/auth");
-require("./api/articles/articles.schema"); // temporaire
+const articleRouter = require('./api/articles/article.router');
+
+require('events').EventEmitter.defaultMaxListeners = 100;
+
+
+require("./api/articles/article.model"); // temporaire
 const app = express();
 
 const server = http.createServer(app);
@@ -30,8 +35,12 @@ app.use(express.json());
 
 app.use("/api/users", authMiddleware, userRouter);
 app.post("/login", usersController.login);
+app.post("/register", usersController.create);
 
 app.use("/", express.static("public"));
+
+app.use("/api/articles", articleRouter);
+
 
 app.use((req, res, next) => {
   next(new NotFoundError());

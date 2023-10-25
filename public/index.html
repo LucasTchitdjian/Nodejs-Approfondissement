@@ -8,34 +8,35 @@
       <article class="grid" v-if="layout == 'login'">
         <div>
           <hgroup>
-            <h1>Sign in</h1>
+            <h1>Login in</h1>
             <h2>A minimalist layout for Login pages</h2>
           </hgroup>
           <form @submit.prevent="login">
             <input type="text" name="login" placeholder="Login" aria-label="Login" autocomplete="nickname" required v-model="email">
-            <input type="password" name="password" placeholder="Password" aria-label="Password" autocomplete="current-password" required v-model="password">
+            <input type="password" name="password" placeholder="Password" aria-label="Password" autocomplete="current-password"
+              required v-model="password">
             <button class="contrast">Login</button>
-          </form>
-        </div>
-        <div>
-
-        </div>
-      </article>
-      <article v-else>
-        <h1>Créer un utilisateur</h1>
-        <form @submit.prevent="create">
-          <input type="text" placeholder="Name" required v-model="newUser.name">
-          <input type="text" placeholder="Email" required v-model="newUser.email">
-          <input type="text" placeholder="Password" required v-model="newUser.password">
-          <button class="contrast">Créer</button>
-        </form>
-        <h1>Utilisateur existant</h1>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
+            </form>
+            </div>
+            <div>
+            </div>
+            </article>
+            <article v-else>
+              <h1>Créer un utilisateur</h1>
+              <form @submit.prevent="create">
+                <input type="text" name="name" placeholder="Name" required v-model="newUser.name">
+                <input type="email" name="email" placeholder="Email" required v-model="newUser.email">
+                <input type="password" name="password" placeholder="Password" required v-model="newUser.password">
+                <button class="contrast">Créer</button>
+              </form>
+            
+              <h1>Utilisateur existant</h1>
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
               <th scope="col">Action</th>
             </tr>
           </thead>
@@ -81,39 +82,52 @@ createApp({
       this.load()
     },
     async load() {
-      this.userToken = localStorage.getItem('token')
+      // Retrieve the token from local storage and log it
+      this.userToken = localStorage.getItem('token');
+      console.log("Retrieved Token:", this.userToken);
+
+      // If there's a token, try to fetch the users
       if (this.userToken) {
-        this.layout = 'list'
-        const users = await axios.get('/api/users', {
+        axios.get('/api/users', {
           headers: {
             'x-access-token': this.userToken
           }
-        }).then(res => res.data)
-        this.users = users
-      }
-
-      socket.on('user:create', (data) => {
-        this.users.push(data)
-      })
-
-      socket.on('user:delete', (data) => {
-        this.users = this.users.filter(user => user._id != data.id)
-      })
+        })
+          .then(res => {
+            this.users = res.data;
+            this.layout = 'list'; // Move this line here to ensure layout changes only on successful fetch
+          })
+          .catch(error => {
+            if (error.response && error.response.status === 401) {
+              // Handle unauthorized error
+              console.error("Unauthorized. Please login again.");
+              // Optionally, you can redirect to login or show a message here
+              this.layout = 'login'; // Redirect back to login layout
+              localStorage.removeItem('token'); // Clear the invalid token
+            } else {
+              console.error(error);
+            }
+      });
+    }
     },
     async remove(userId) {
       await axios.delete('/api/users/' + userId, {
           headers: {
             'x-access-token': this.userToken
-          }
+        }
       })
     },
     async create() {
-      await axios.post('/api/users', this.newUser, {
-          headers: {
-            'x-access-token': this.userToken
-          }
-      }).then(res => res.data)
+      await axios.post('/register', this.newUser, {
+        headers: {
+          'x-access-token': this.userToken
+        }
+      }).then(res => {
+        this.users.push(res.data); // Add the new user to the users list
+        this.newUser = {}; // Reset the form fields
+      })
     }
+
   }
 }).mount('#app')
 </script>

@@ -27,14 +27,16 @@ class UsersController {
   }
   async create(req, res, next) {
     try {
+      console.log(req.body);
       const user = await usersService.create(req.body);
       user.password = undefined;
-      req.io.emit("user:create", user);
       res.status(201).json(user);
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      console.error("Error registering user:", error);
+      next(error);
     }
-  }
+}
+
   async update(req, res, next) {
     try {
       const id = req.params.id;
