@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const Article = require('./article.model');
+const authenticateToken = require("../../middlewares/authenticateToken");
+const usersController = require("../users/users.controller");
+const ArticleController = require("../articles/article.controller");
+
+
+// Middleware
+router.use(authenticateToken);
+
+router.get('/users/:userId/articles', authenticateToken, usersController.getUserArticles); // Afficher articles d'un utilisateur
 
 
 // Middleware pour vérifier l'authentification
@@ -22,19 +31,12 @@ function ensureAdmin(req, res, next) {
 }
 
 // Création d'un article
-router.post('/articles', ensureAuthenticated, (req, res) => {
-    const article = new Article({
-        title: req.body.title,
-        content: req.body.content,
-        author: req.user._id
-    });
-    article.save((err, savedArticle) => {
-        if (err) return res.status(500).send(err);
-        // Envoi d'un événement socket.io pour informer les clients de la création d'un nouvel article
-        req.app.get('socketio').emit('article:created', savedArticle);
-        res.status(201).send(savedArticle);
-    });
-});
+router.post('/articles/:userId/create', async (req, res) => {
+    console.log('Article create route hit');
+    
+    await ArticleController.createArticleForUser(req, res);
+    console.log(req.body)
+  });
 
 // Mise à jour d'un article
 router.put('/articles/:id', ensureAuthenticated, ensureAdmin, (req, res) => {

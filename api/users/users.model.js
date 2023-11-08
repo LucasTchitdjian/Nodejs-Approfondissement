@@ -31,6 +31,7 @@ const userSchema = Schema({
     },
   },
   age: Number,
+  articles: [{ type: Schema.Types.ObjectId, ref: "Article" }]
 });
 
 /*userSchema.pre('save', function() {

@@ -29,7 +29,6 @@ app.use((req, res, next) => {
   req.io = io;
   next();
 });
-
 app.use(cors());
 app.use(express.json());
 
@@ -40,6 +39,7 @@ app.post("/register", usersController.create);
 app.use("/", express.static("public"));
 
 app.use("/api/articles", articleRouter);
+app.use("/api/users", userRouter);
 
 
 app.use((req, res, next) => {

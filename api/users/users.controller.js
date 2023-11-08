@@ -35,7 +35,7 @@ class UsersController {
       console.error("Error registering user:", error);
       next(error);
     }
-}
+  }
 
   async update(req, res, next) {
     try {
@@ -58,22 +58,36 @@ class UsersController {
       next(err);
     }
   }
+
   async login(req, res, next) {
     try {
       const { email, password } = req.body;
-      console.log("Email:", email);
-      console.log("Password:", password);
       const userId = await usersService.checkPasswordUser(email, password);
-      console.log("Returned userId:", userId);
       if (!userId) {
         throw new UnauthorizedError();
       }
-      const token = jwt.sign({ userId }, config.secretJwtToken, {
-        expiresIn: "3d",
-      });
-      res.json({
-        token,
-      });
+      res.json({ token: jwt.sign({ userId }, config.secretJwtToken, { expiresIn: '3d' }) });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getUserArticles(req, res, next) {
+    try {
+      const articleQuery = articleService.find({ userId: req.params.userId }).populate('articles').lean().exec();
+      const token = req.headers['x-access-token'];
+      if (token) {
+        articleQuery.setHeaders({ Authorization: `Bearer ${token}` });
+      }
+      const user = await userService.findById(req.params.userId)
+        .select('-password') // Exclude the password
+        .populate('articles'); // Populate the articles
+
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+
+      res.json(user);
     } catch (err) {
       next(err);
     }

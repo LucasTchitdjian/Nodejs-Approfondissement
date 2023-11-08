@@ -1,23 +1,24 @@
 const express = require('express');
 
-const Article = require('./article.model');
+const Article = require('../articles/article.model');
 
 class ArticleController {
-    createArticle(req, res) {
-        const newArticle = new Article({
-            title: req.body.title,
-            content: req.body.content,
-            status: req.body.status,
-            author: req.user._id 
-        });
-    
-        newArticle.save().then(article => {
-            res.json(article);
-        }).catch(err => {
-            res.status(400).json(err);
-        });
+    async createArticleForUser(req, res) {
+        try {
+            const newArticle = new Article({
+                title: req.body.title,
+                content: req.body.content,
+                user: req.params.userId
+            });
+
+            await newArticle.save();
+
+            res.json(newArticle);
+        } catch (err) {
+            next(err);
+        }
     }
-    
+
 
     updateArticle(req, res) {
         const { title, content, status } = req.body;
@@ -52,6 +53,32 @@ class ArticleController {
             })
             .catch(err => res.status(500).json({ message: 'Erreur lors de la recherche de l\'article.', error: err }));
     }
+    // article.controller.js
+
+    async createArticleForUser(req, res) {
+
+        // Validate request
+
+        try {
+            const { title, content } = req.body;
+
+            const newArticle = new Article({
+                title,
+                content,
+                user: req.params.userId
+            });
+
+            const article = await newArticle.save();
+
+            res.status(201).json(article);
+
+        } catch (err) {
+            res.status(400).json({ message: err.message });
+        }
+
+
+    }
+
 }
 
 module.exports = ArticleController;
